@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import io from "socket.io-client";
 import './Chat.css'
 
-// const username = prompt('What is your name');
+const username = prompt('What is your name');
 
 // add  "proxy": "http://localhost:3001", to package.json
 
@@ -37,9 +37,23 @@ const Chat = ({}) => {
         // });
         //captures event from server
         useEffect(() => {
+            socket.on("connect", () => {
+                socket.emit("new-user", username);
+                });
+
+            //adds each new user to the existing users array
+            socket.on("connected", user => {
+                setUsers(users => [...users, user]);
+            });
+
+            //set users array 
+            socket.on("users", users => {
+                setUsers(users);
+              });
+
             socket.on('chat message', (msg) => {
                 console.log(msg)
-            setMessages([...messages, msg])
+                setMessages([...messages, msg])
             });
 
         }, [messages]);
@@ -52,11 +66,14 @@ const Chat = ({}) => {
 
         return (
             <div>
-                <input value={message} onSubmit={handleSend} onChange={(event) => setMessage(event.target.value)} />
-                <button onClick={handleSend}>Send</button>
+                <div>
+                    <h1>Hello {username}</h1>
+                </div>
                 <ul>
-                    {messages.map((message, index) => <li key={index}>{message}</li>)}
+                    {messages.map(({user, text}, index) => (<li key={index}>{user.name}: {text}</li>))}
                 </ul>
+                <input value={message} type="text" onSubmit={handleSend} onChange={(event) => setMessage(event.target.value)} />
+                <button onClick={handleSend}>Send</button>
             </div>
         )
 
