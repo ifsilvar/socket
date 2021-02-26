@@ -17,15 +17,24 @@ const users = {};
 
 io.on('connection', (socket) => {
     console.log('a user connected');
-    socket.on('new-user', name => {
-        users[socket.id] = name
-        socket.broadcast.emit('user-connected', name)
-      })
+    socket.on('new-user', username => {
+      const user = {
+        name: username,
+        id: socket.id
+      }
+        users[socket.id] = user;
+        io.emit("connected", user);
+        io.emit("users", Object.values(users));
+        // socket.broadcast.emit('user-connected', name)
+      });
     //print out chat message event
     socket.on('chat message', (msg) => {
         //socket.broadcast.emit() will send message to everyone except a certain socket
         //this will send the message to all the sockets
-        io.emit('chat message', msg);
+        io.emit('chat message', {
+          text: msg,
+          user: users[socket.id]
+        });
         console.log('message: ' + msg);
       });
 
